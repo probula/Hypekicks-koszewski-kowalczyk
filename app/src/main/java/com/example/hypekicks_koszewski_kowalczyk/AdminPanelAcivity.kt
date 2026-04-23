@@ -27,6 +27,7 @@ class AdminPanelAcivity : AppCompatActivity() {
     private lateinit var listView: ListView
     private val listText = mutableListOf<String>()
     private lateinit var listAdapter: ArrayAdapter<String>
+    private val sneakersInList = mutableListOf<Sneaker>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +46,28 @@ class AdminPanelAcivity : AppCompatActivity() {
         listView.adapter = listAdapter
 
         btnAdd.setOnClickListener { addSneakerToFirestore() }
+
+        listView.setOnItemLongClickListener { _, _, position, _ ->
+            val sneaker = sneakersInList.getOrNull(position)
+            val sneakerId = sneaker?.id?.trim().orEmpty()
+
+            if (sneakerId.isBlank()) {
+                Toast.makeText(this, "Brak id – nie można usunąć.", Toast.LENGTH_SHORT).show()
+                return@setOnItemLongClickListener true
+            }
+
+            db.collection("sneakers")
+                .document(sneakerId)
+                .delete()
+                .addOnSuccessListener {
+                    Toast.makeText(this, "Usunięto z bazy.", Toast.LENGTH_SHORT).show()
+                }
+                .addOnFailureListener { err ->
+                    Toast.makeText(this, "Błąd usuwania: ${err.message}", Toast.LENGTH_SHORT).show()
+                }
+
+            true
+        }
     }
 
     override fun onStart() {
@@ -59,8 +82,12 @@ class AdminPanelAcivity : AppCompatActivity() {
 
                 val docs = snapshot?.documents.orEmpty()
                 val sneakers = docs.mapNotNull { doc ->
-                    runCatching { doc.toObject(Sneaker::class.java) }.getOrNull()
+                    val s = runCatching { doc.toObject(Sneaker::class.java) }.getOrNull()
+                    if (s != null && s.id.isBlank()) s.id = doc.id
+                    s
                 }
+                sneakersInList.clear()
+                sneakersInList.addAll(sneakers)
 
                 listText.clear()
                 listText.addAll(
