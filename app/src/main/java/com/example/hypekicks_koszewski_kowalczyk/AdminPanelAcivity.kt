@@ -9,12 +9,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.hypekicks_koszewski_kowalczyk.model.Sneaker
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
 
 
 class AdminPanelAcivity : AppCompatActivity() {
     private val db = Firebase.firestore
-
+    private var sneakersListener: ListenerRegistration? = null
     private lateinit var etId: EditText
     private lateinit var etBrand: EditText
     private lateinit var etModelName: EditText
@@ -46,6 +47,36 @@ class AdminPanelAcivity : AppCompatActivity() {
         btnAdd.setOnClickListener { addSneakerToFirestore() }
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        sneakersListener = db.collection("sneakers")
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    Toast.makeText(this, "Błąd pobierania: ${e.message}", Toast.LENGTH_SHORT).show()
+                    return@addSnapshotListener
+                }
+
+                val docs = snapshot?.documents.orEmpty()
+                val sneakers = docs.mapNotNull { doc ->
+                    runCatching { doc.toObject(Sneaker::class.java) }.getOrNull()
+                }
+
+                listText.clear()
+                listText.addAll(
+                    sneakers.map { s ->
+                        "${s.brand} ${s.modelName} (${s.releaseYear}) | ${s.resellPrice} | id=${s.id} | ${s.imageUrl}"
+                    }
+                )
+                listAdapter.notifyDataSetChanged()
+            }
+    }
+
+    override fun onStop() {
+        sneakersListener?.remove()
+        sneakersListener = null
+        super.onStop()
+    }
     private fun addSneakerToFirestore(){
         val idInput =etId.text?.toString()?.trim().orEmpty()
         val brand = etBrand.text?.toString()?.trim().orEmpty()
