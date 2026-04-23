@@ -1,5 +1,6 @@
 package com.example.hypekicks_koszewski_kowalczyk
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.GridView
 import android.widget.SearchView
@@ -12,7 +13,8 @@ import kotlin.jvm.java
 class StorefrontActivity : AppCompatActivity() {
 
     private val db = Firebase.firestore
-    private val list = mutableListOf<Sneaker>()
+    private lateinit var searchView: SearchView
+    private lateinit var gridView: GridView
     private lateinit var adapter: SneakerAdapter
 
 
@@ -25,10 +27,18 @@ class StorefrontActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_storefront)
 
-        val gridView = findViewById<GridView>(R.id.gridView)
+        gridView = findViewById(R.id.gridView)
 
         adapter = SneakerAdapter(this, filteredList)
         gridView.adapter = adapter
+
+        gridView.setOnItemClickListener { _, _, position, _ ->
+            val sneaker = filteredList.getOrNull(position) ?: return@setOnItemClickListener
+            startActivity(
+                Intent(this, DetailsActivity::class.java)
+                    .putExtra(DetailsActivity.EXTRA_SNEAKER, sneaker)
+            )
+        }
 
         db.collection("sneakers")
             .get()
@@ -43,7 +53,8 @@ class StorefrontActivity : AppCompatActivity() {
                 filteredList.addAll(fullList)
                 adapter.notifyDataSetChanged()
             }
-        val searchView = findViewById<SearchView>(R.id.searchView)
+
+        searchView = findViewById(R.id.searchView)
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
