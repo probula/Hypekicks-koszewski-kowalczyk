@@ -5,10 +5,15 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ListView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.hypekicks_koszewski_kowalczyk.model.Sneaker
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 
 
 class AdminPanelAcivity : AppCompatActivity() {
+    private val db = Firebase.firestore
 
     private lateinit var etId: EditText
     private lateinit var etBrand: EditText
@@ -37,6 +42,60 @@ class AdminPanelAcivity : AppCompatActivity() {
         listView = findViewById(R.id.lvSneakers)
         listAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, listText)
         listView.adapter = listAdapter
+
+        btnAdd.setOnClickListener { addSneakerToFirestore() }
+    }
+
+    private fun addSneakerToFirestore(){
+        val idInput =etId.text?.toString()?.trim().orEmpty()
+        val brand = etBrand.text?.toString()?.trim().orEmpty()
+        val modelName = etModelName.text?.toString()?.trim().orEmpty()
+        val releaseYearStr = etReleaseYear.text?.toString()?.trim().orEmpty()
+        val resellPriceStr = etResellPrice.text?.toString()?.trim().orEmpty()
+        val imageUrl = etImageUrl.text?.toString()?.trim().orEmpty()
+
+        if (brand.isBlank() || modelName.isBlank() || releaseYearStr.isBlank() || resellPriceStr.isBlank() || imageUrl.isBlank()) {
+            Toast.makeText(this, "Uzupełnij wszystkie pola.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val releaseYear = releaseYearStr.toLongOrNull()
+        if (releaseYear == null) {
+            Toast.makeText(this, "Niepoprawny rok wydania.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val resellPrice = resellPriceStr.toLongOrNull()
+        if (resellPrice == null) {
+            Toast.makeText(this, "Niepoprawna cena.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val col = db.collection("sneakers")
+        val docRef = if (idInput.isNotBlank()) col.document(idInput) else col.document()
+
+        val sneaker = Sneaker(
+            id = docRef.id,
+            brand = brand,
+            modelName = modelName,
+            releaseYear = releaseYear,
+            resellPrice = resellPrice,
+            imageUrl = imageUrl
+        )
+
+        docRef.set(sneaker)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Dodano do bazy.", Toast.LENGTH_SHORT).show()
+                etId.setText("")
+                etBrand.setText("")
+                etModelName.setText("")
+                etReleaseYear.setText("")
+                etResellPrice.setText("")
+                etImageUrl.setText("")
+            }
+            .addOnFailureListener { err ->
+                Toast.makeText(this, "Błąd zapisu: ${err.message}", Toast.LENGTH_SHORT).show()
+            }
 
 
     }
