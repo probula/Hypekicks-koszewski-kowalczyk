@@ -45,4 +45,9 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+
+    implementation(platform (libs.firebase.bom))
+    implementation(libs.firebase.firestore)
+
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 }
