@@ -11,7 +11,17 @@
     <GridView
         android:id="@+id/gridView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:numColumns="2"/>
+
+    <Button
+        android:id="@+id/btnAdminPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="AdminPanel"
+        android:backgroundTint="#6200EE"
+        android:textColor="#FFFFFF"
+        android:layout_margin="8dp"/>
 
 </LinearLayout>
