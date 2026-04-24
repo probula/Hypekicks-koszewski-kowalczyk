@@ -1,5 +1,6 @@
 package com.example.hypekicks_koszewski_kowalczyk
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -67,6 +68,11 @@ class AdminPanelAcivity : AppCompatActivity() {
                 }
 
             true
+        }
+        val btn2 = findViewById<Button>(R.id.HomePanel)
+        btn2.setOnClickListener {
+            val intent = Intent(this, StorefrontActivity::class.java)
+            startActivity(intent)
         }
     }
 
